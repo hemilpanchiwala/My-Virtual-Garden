@@ -73,6 +73,7 @@ public class PlantDetailActivity extends AppCompatActivity
         contentValues.put(PlantContract.PlantEntry.COLUMN_LAST_WATERED_TIME, timeNow);
         getContentResolver().update(SINGLE_PLANT_URI, contentValues, null, null);
         cursor.close();
+        PlantWateringService.startActionUpdatePlantWidget(this);
     }
 
     @Override
@@ -125,6 +126,7 @@ public class PlantDetailActivity extends AppCompatActivity
         Uri SINGLE_PLANT_URI = ContentUris.withAppendedId(
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_PLANTS).build(), mPlantId);
         getContentResolver().delete(SINGLE_PLANT_URI, null, null);
+        PlantWateringService.startActionUpdatePlantWidget(this);
         finish();
     }
 }
