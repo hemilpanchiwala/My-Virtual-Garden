@@ -1,10 +1,14 @@
 package com.example.android.mygarden;
 
+import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
+import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
 import android.view.View;
 import android.widget.RemoteViews;
@@ -23,10 +27,30 @@ public class PlantProviderWidget extends AppWidgetProvider {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
     }
 
-
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int imgRes, int appWidgetId, long plantId, boolean canWater) {
 
+        Bundle bundle = appWidgetManager.getAppWidgetOptions(appWidgetId);
+        int width = bundle.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
+
+        RemoteViews remoteViews;
+        if (width<300){
+            remoteViews = getSinglePlantRemoteView(context, imgRes, plantId, canWater);
+        }else {
+            remoteViews = getGardenGridRemoteView(context);
+        }
+
+        // Instruct the widget manager to update the widget
+        appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
+    }
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        PlantWateringService.startActionUpdatePlantWidget(context);
+    }
+
+    private static RemoteViews getSinglePlantRemoteView(Context context, int imgRes, long plantId, boolean canWater){
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.plant_provider_widget);
 
@@ -53,13 +77,20 @@ public class PlantProviderWidget extends AppWidgetProvider {
         PendingIntent pendingWaterIntent = PendingIntent.getActivity(context, 0, waterIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         views.setOnClickPendingIntent(R.id.widget_water_drop, pendingWaterIntent);
 
-        // Instruct the widget manager to update the widget
-        appWidgetManager.updateAppWidget(appWidgetId, views);
+        return views;
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     @Override
-    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
         PlantWateringService.startActionUpdatePlantWidget(context);
+    }
+
+
+    private static RemoteViews getGardenGridRemoteView(Context context){
+
+        return null;
     }
 
     public static void updatePlantWidgets(Context context, AppWidgetManager appWidgetManager,
